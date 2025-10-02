@@ -22,38 +22,42 @@ from PIL import Image, ImageFilter
 from scipy import ndimage
 from scipy.spatial import cKDTree
 import matplotlib.pyplot as plt
+from scipy.interpolate import splprep, splev
+
 
 # -------------------------
 # Utilities: importance map
 # -------------------------
-def compute_importance_map(img_gray: np.ndarray, edge_weight=1.0, darkness_weight=1.0, blur_sigma=1.0):
+def compute_importance_map(img_gray: np.ndarray, edge_weight=1.0, darkness_weight=1.0, blur_sigma=0.0, brightness_cutoff=0.0):
     """
     img_gray: 2D numpy array with values 0..255 (uint8)
-    Returns normalized importance map (float64) same shape.
-    Combines inverted brightness (dark => higher) with edges (Sobel magnitude).
+    brightness_cutoff: fraction (0..1). If brightness > cutoff (i.e. too bright), no points will be sampled there.
     """
-    # Normalize to 0..1
-    im = img_gray.astype(np.float64) / 255.0
-    # darkness importance: invert intensity
-    darkness = 1.0 - im  # dark -> 1, bright -> 0
-    darkness = darkness ** darkness_weight  # enhance contrast
+    im = img_gray.astype(np.float64) / 255.0  # brightness 0..1
+    darkness = 1.0 - im  # dark=1, bright=0
+    
+    # apply cutoff: zero out all areas that are too bright
+    mask = darkness >= brightness_cutoff
+    darkness = np.where(mask, darkness, 0.0)
+    
+    # apply non-linear emphasis
+    darkness = darkness ** darkness_weight
+    
     # Sobel edges
     sx = ndimage.sobel(im, axis=1, mode='reflect')
     sy = ndimage.sobel(im, axis=0, mode='reflect')
     edges = np.hypot(sx, sy)
-    # normalize edges
     if edges.max() > 0:
-        edges = edges / edges.max()
+        edges /= edges.max()
+    # also mask edges so bright areas don't count
+    edges = np.where(mask, edges, 0.0)
 
     combined = darkness_weight * darkness + edge_weight * edges
 
-    # small gaussian blur to avoid too sharp spikes
     if blur_sigma > 0:
         combined = ndimage.gaussian_filter(combined, sigma=blur_sigma)
 
-    # prevent all-zero
     combined += 1e-12
-    # normalize
     combined = combined / combined.sum()
     return combined
 
@@ -88,6 +92,7 @@ def nearest_neighbor_order(points, start_index=0):
     """Return an order using nearest neighbor heuristic (fast via KD-tree)."""
     n = len(points)
     tree = cKDTree(points)
+    print(tree.data.shape)
     visited = np.zeros(n, dtype=bool)
     order = np.empty(n, dtype=int)
     cur = start_index
@@ -98,7 +103,7 @@ def nearest_neighbor_order(points, start_index=0):
             break
         # query for next nearest that is not visited
         # we progressively ask for k nearest
-        k = 8
+        k = 1
         found = False
         while not found:
             dists, idxs = tree.query(points[cur], k=k)
@@ -196,6 +201,43 @@ def draw_tsp(points, order, img_shape=None, linewidth=0.3, figsize=(10,10), dpi=
         plt.savefig(save_svg, bbox_inches='tight', pad_inches=0)
     plt.close(fig)
 
+from matplotlib.path import Path
+import matplotlib.patches as patches
+
+def draw_tsp_smooth(points, order, img_shape=None, linewidth=0.3,
+                    figsize=(10,10), dpi=300, save_png=None, save_svg=None, background='white', smoothing=0.01):
+    p = points[order]
+    x = p[:,0]
+    y = p[:,1]
+
+    # Parametrize by cumulative distance
+    dist = np.cumsum(np.sqrt(np.diff(x, prepend=x[0])**2 + np.diff(y, prepend=y[0])**2))
+    dist /= dist[-1]  # normalize 0..1
+
+    # B-spline parametrization
+    tck, u = splprep([x, y], u=dist, s=smoothing*len(points))  # s controls smoothness
+    u_new = np.linspace(0, 1, len(points)*10)
+    x_new, y_new = splev(u_new, tck)
+
+    fig = plt.figure(figsize=figsize, dpi=dpi)
+    ax = fig.add_subplot(111)
+    ax.set_facecolor(background)
+    ax.plot(x_new, y_new, linewidth=linewidth, solid_capstyle='round', color='black')
+    ax.set_aspect('equal')
+    ax.invert_yaxis()
+    ax.axis('off')
+
+    if img_shape is not None:
+        H, W = img_shape
+        ax.set_xlim(0, W)
+        ax.set_ylim(H, 0)
+
+    if save_png:
+        plt.savefig(save_png, bbox_inches='tight', pad_inches=0, dpi=dpi)
+    if save_svg:
+        plt.savefig(save_svg, bbox_inches='tight', pad_inches=0)
+    plt.close(fig)
+
 # -------------------------
 # Main pipeline
 # -------------------------
@@ -209,9 +251,17 @@ def run_pipeline(input_path, n_points=3000, random_seed=None,
     print(f"Loaded image {input_path} (W={W}, H={H})")
     # convert to grayscale
     img_gray = np.asarray(img.convert('L'))
+    corner_vals = [
+        img_gray[0, 0],          # top-left
+        img_gray[0, -1]          # top-right
+    ]
+    bg_brightness = np.mean(corner_vals) / 255.0
+    mask = (img_gray.astype(np.float64) / 255.0) < (bg_brightness - 0.45)
 
     # compute importance
     imp = compute_importance_map(img_gray, edge_weight=edge_weight, darkness_weight=darkness_weight, blur_sigma=blur_sigma)
+    imp *= mask
+    imp /= imp.sum()
     print("Computed importance map.")
 
     # sample points
@@ -238,7 +288,8 @@ def run_pipeline(input_path, n_points=3000, random_seed=None,
 
     # draw and save
     print(f"Rendering and saving to {out_svg} and {out_png} ...")
-    draw_tsp(pts, order, img_shape=(H, W), linewidth=linewidth, save_png=out_png, save_svg=out_svg)
+    #draw_tsp(pts, order, img_shape=(H, W), linewidth=linewidth, save_png=out_png, save_svg=out_svg)
+    draw_tsp_smooth(pts, order, img_shape=(H, W), linewidth=linewidth, save_png=out_png, save_svg=out_svg, smoothing=0.03)
     print("Done.")
 
 # -------------------------
@@ -255,7 +306,7 @@ def parse_args():
     p.add_argument("--no-2opt", action='store_true', help="Disable 2-opt step (faster).")
     p.add_argument("--out-svg", default="out.svg")
     p.add_argument("--out-png", default="out.png")
-    p.add_argument("--linewidth", type=float, default=1)
+    p.add_argument("--linewidth", type=float, default=2)
     return p.parse_args()
 
 if __name__ == "__main__":
