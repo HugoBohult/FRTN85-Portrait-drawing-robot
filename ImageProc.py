@@ -255,15 +255,20 @@ def run_pipeline(input_path, n_points=3000, random_seed=None,
         img_gray[0, 0],          # top-left
         img_gray[0, -1]          # top-right
     ]
-    bg_brightness = np.mean(corner_vals) / 255.0
-    mask = (img_gray.astype(np.float64) / 255.0) < (bg_brightness - 0.45)
+    bg_brightness = np.mean(img_gray) / 255.0
+    mask = (img_gray.astype(np.float64) / 255.0) < (bg_brightness - 0.4)
 
     # compute importance
     imp = compute_importance_map(img_gray, edge_weight=edge_weight, darkness_weight=darkness_weight, blur_sigma=blur_sigma)
     imp *= mask
     imp /= imp.sum()
     print("Computed importance map.")
-
+    plt.imshow(mask)
+    plt.title("Mask")
+    plt.show()
+    plt.imshow(imp)
+    plt.title("Importance Map")
+    plt.show()
     # sample points
     pts = sample_points_from_importance(imp, n_points, jitter=True, rng=rng)
     print(f"Sampled {n_points} points.")
