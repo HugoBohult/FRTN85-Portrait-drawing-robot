@@ -8,8 +8,7 @@ Dependencies:
     pip install pillow numpy scipy matplotlib
 
 Example:
-    python tsp_portrait.py --input portrait.jpg --points 3000 --out out.svg
-"""
+python ImageProc.py --input randPort.jpg --points 2000 --darkness-weight 2.0 --edge-weight 50000.0 --out-svg out.svg --no-2opt --blur-sigma 0"""
 
 import argparse
 import math
@@ -209,7 +208,7 @@ def draw_tsp_smooth(points, order, img_shape=None, linewidth=0.3,
     p = points[order]
     x = p[:,0]
     y = p[:,1]
-
+    print(points)
     # Parametrize by cumulative distance
     dist = np.cumsum(np.sqrt(np.diff(x, prepend=x[0])**2 + np.diff(y, prepend=y[0])**2))
     dist /= dist[-1]  # normalize 0..1
@@ -256,7 +255,7 @@ def run_pipeline(input_path, n_points=3000, random_seed=None,
         img_gray[0, -1]          # top-right
     ]
     bg_brightness = np.mean(img_gray) / 255.0
-    mask = (img_gray.astype(np.float64) / 255.0) < (bg_brightness - 0.4)
+    mask = (img_gray.astype(np.float64) / 255.0) < (bg_brightness - 0.1)
 
     # compute importance
     imp = compute_importance_map(img_gray, edge_weight=edge_weight, darkness_weight=darkness_weight, blur_sigma=blur_sigma)
