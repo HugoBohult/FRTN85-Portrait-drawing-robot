@@ -1,0 +1,42 @@
+MODULE Module1
+	CONST robtarget home:= [[280.027029643,125.4,-515.328184811],[0,0.608761442,0,0.79335333],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+
+	CONST robtarget air1:=[[20,20,-160],[1,0,0,0],[0,0,-2,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+	CONST robtarget air2:=[[100,100,-160],[1,0,0,0],[0,0,-2,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+	CONST robtarget air3:=[[160,40,-160],[1,0,0,0],[0,0,-2,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+	CONST robtarget searchpoint1:=[[20,20,0],[1,0,0,0],[0,0,-2,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+	CONST robtarget searchpoint2:=[[100,100,0],[1,0,0,0],[0,0,-2,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+	CONST robtarget searchpoint3:=[[160,40,0],[1,0,0,0],[0,0,-2,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+	VAR robtarget planepoint1;
+	VAR robtarget planepoint2;
+	VAR robtarget planepoint3;
+
+	CONST robtarget Dpoint0:=[[20,20,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+	CONST robtarget Dpoint1:=[[50,50,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+	CONST robtarget Dpoint2:=[[30,50,0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+
+	PROC plane_finder()
+		MoveJ air1,v50,z1,BHH_pen\WObj:=Workobject_1;
+		SearchL \Stop, DI10_0, planepoint1, searchpoint1, v20, BHH_pen\WObj:=Workobject_1;
+		MoveJ air2,v50,z1,BHH_pen\WObj:=Workobject_1;
+		SearchL \Stop, DI10_0, planepoint2, searchpoint2, v20, BHH_pen\WObj:=Workobject_1;
+		MoveJ air3,v50,z1,BHH_pen\WObj:=Workobject_1;
+		SearchL \Stop, DI10_0, planepoint3, searchpoint3, v20, BHH_pen\WObj:=Workobject_1;
+		MoveJ air3,v50,z1,BHH_pen\WObj:=Workobject_1;
+		Workobject_1.oframe := DefDframe (searchpoint1, searchpoint2, searchpoint3,planepoint1, planepoint2, planepoint3);
+	ENDPROC
+
+
+	PROC drawing_sequence()
+		MoveJ Dpoint0,v100,z1,BHH_pen\WObj:=Workobject_1;
+		MoveL Dpoint1,v100,z1,BHH_pen\WObj:=Workobject_1;
+		MoveL Dpoint2,v100,z1,BHH_pen\WObj:=Workobject_1;
+	ENDPROC
+
+	PROC main()
+		MoveJ home,v100,z1,BHH_pen\WObj:=Workobject_1;
+		plane_finder;
+		drawing_sequence;
+		MoveJ home,v100,z1,BHH_pen\WObj:=Workobject_1;
+	ENDPROC
+ENDMODULE
