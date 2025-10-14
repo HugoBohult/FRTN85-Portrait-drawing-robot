@@ -41,7 +41,7 @@ def drawing_sequence(file, countours):
         for j, point in enumerate(cnt):
             if j%3 == 0:
                 file.write(f"\t\tMoveL Dpoint{i}_{j},v100,z1,BHH_pen\WObj:=Workobject_1;\n")
-        file.write(f"\t\tMoveL Offs(Dpoint{i}_{len(cnt)-1},0,0,-20),v100,z1,BHH_pen\WObj:=Workobject_1;\n")
+        file.write(f"\t\tMoveL Offs(Dpoint{i}_{len(cnt)-(len(cnt)-1)%3-1},0,0,-20),v100,z1,BHH_pen\WObj:=Workobject_1;\n")
 
     file.write("\tENDPROC\n\n")
 
