@@ -8,7 +8,7 @@ def plane_finder_sequence(file):
     file.write("\t\tMoveJ air3,v50,z1,BHH_pen\WObj:=Workobject_1;\n")
     file.write("\t\tSearchL \Stop, DI10_0, planepoint3, searchpoint3, v20, BHH_pen\WObj:=Workobject_1;\n")
     file.write("\t\tMoveJ air3,v50,z1,BHH_pen\WObj:=Workobject_1;\n")
-    file.write("\t\tWorkobject_1.oframe := DefDframe (searchpoint1, searchpoint2, searchpoint3,planepoint1, planepoint2, planepoint3);\n")
+    file.write("\t\tWorkobject_2.oframe := DefDframe (searchpoint1, searchpoint2, searchpoint3,planepoint1, planepoint2, planepoint3);\n")
     file.write("\tENDPROC\n\n")
 
 #Define points
@@ -37,11 +37,11 @@ def drawing_sequence(file, countours):
     file.write("\n\tPROC drawing_sequence()\n")
 
     for i, cnt in enumerate(countours):
-        file.write(f"\t\tMoveL Offs(Dpoint{i}_{0},0,0,-20),v100,z1,BHH_pen\WObj:=Workobject_1;\n")
+        file.write(f"\t\tMoveL Offs(Dpoint{i}_{0},0,0,-20),v100,z1,BHH_pen\WObj:=Workobject_2;\n")
         for j, point in enumerate(cnt):
             if j%3 == 0:
-                file.write(f"\t\tMoveL Dpoint{i}_{j},v100,z1,BHH_pen\WObj:=Workobject_1;\n")
-        file.write(f"\t\tMoveL Offs(Dpoint{i}_{len(cnt)-(len(cnt)-1)%3-1},0,0,-20),v100,z1,BHH_pen\WObj:=Workobject_1;\n")
+                file.write(f"\t\tMoveL Dpoint{i}_{j},v100,z1,BHH_pen\WObj:=Workobject_2;\n")
+        file.write(f"\t\tMoveL Offs(Dpoint{i}_{(len(cnt)-1)-(len(cnt)-1)%3},0,0,-20),v100,z1,BHH_pen\WObj:=Workobject_2;\n")
 
     file.write("\tENDPROC\n\n")
 
