@@ -26,21 +26,22 @@ def define_Calibpoints(file):
 def define_Drawingpoints(file,countours):
     for i, cnt in enumerate(countours):
         for j, point in enumerate(cnt):
-            name = f"Dpoint{i}_{j}"
-            file.write(stringify_point(name, point[0], point[1]))
+            if j%3 == 0:
+                name = f"Dpoint{i}_{j}"
+                file.write(stringify_point(name, point[0][0], point[0][1]))
 
 def stringify_point(name, x, y):
     return f"\tCONST robtarget {name}:=[[{x},{y},0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];\n"
 
 def drawing_sequence(file, countours):
     file.write("\n\tPROC drawing_sequence()\n")
-    file.write("\t\tMoveJ Dpoint0,v100,z1,BHH_pen\WObj:=Workobject_1;\n")
 
     for i, cnt in enumerate(countours):
-        file.write(f"\t\tMoveJ Dpoint{i}_{0},v100,z1,BHH_pen\WObj:=Workobject_1;\n")
+        file.write(f"\t\tMoveL Offs(Dpoint{i}_{0},0,0,-20),v100,z1,BHH_pen\WObj:=Workobject_1;\n")
         for j, point in enumerate(cnt):
-            file.write(f"\t\tMoveL Dpoint{i}_{j},v100,z1,BHH_pen\WObj:=Workobject_1;\n")
-        file.write(f"\t\tMoveJ Dpoint{i}_{len(cnt)-1},v100,z1,BHH_pen\WObj:=Workobject_1;\n")
+            if j%3 == 0:
+                file.write(f"\t\tMoveL Dpoint{i}_{j},v100,z1,BHH_pen\WObj:=Workobject_1;\n")
+        file.write(f"\t\tMoveL Offs(Dpoint{i}_{len(cnt)-1},0,0,-20),v100,z1,BHH_pen\WObj:=Workobject_1;\n")
 
     file.write("\tENDPROC\n\n")
 

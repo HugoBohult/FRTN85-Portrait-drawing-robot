@@ -27,9 +27,9 @@ def segment(image_path, K=5, draw=False):
 
         
 
-    t = t.Turtle()
-    t.speed(0)  
-    t.penup()
+    #t = t.Turtle()
+    #t.speed(0)  
+    #t.penup()
     if(draw):
         for cnt in contours:
             print(cnt)
