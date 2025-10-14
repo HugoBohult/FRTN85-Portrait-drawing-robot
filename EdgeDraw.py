@@ -23,13 +23,15 @@ def segment(image_path, K=5, draw=False):
     #imgray = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
     ret, thresh = cv.threshold(gray,40, 255, 0)
     contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
-
+    for cnt in contours:
+        if(cv.contourArea(cnt) < 50):
+            contours.remove(cnt)
 
         
 
-    t = t.Turtle()
-    t.speed(0)  
-    t.penup()
+    #t = t.Turtle()
+    #t.speed(0)  
+    #t.penup()
     if(draw):
         for cnt in contours:
             print(cnt)
