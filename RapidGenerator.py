@@ -23,6 +23,7 @@ def define_Calibpoints(file):
     file.write("\tVAR robtarget planepoint2;\n")
     file.write("\tVAR robtarget planepoint3;\n\n")
 
+#Writes the drawing points to the RAPID file using stringify_point
 def define_Drawingpoints(file,countours):
     for i, cnt in enumerate(countours):
         for j, point in enumerate(cnt):
@@ -30,9 +31,11 @@ def define_Drawingpoints(file,countours):
                 name = f"Dpoint{i}_{j}"
                 file.write(stringify_point(name, point[0][0]/3, point[0][1]/3))
 
+#Helper function to format a point in RAPID syntax
 def stringify_point(name, x, y):
     return f"\tCONST robtarget {name}:=[[{x},{y},0],[1,0,0,0],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];\n"
 
+#Drawing sequence
 def drawing_sequence(file, countours):
     file.write("\n\tPROC drawing_sequence()\n")
     file.write("\t\tConfL \Off;\n")
@@ -49,25 +52,21 @@ def drawing_sequence(file, countours):
 
 #main program
 def generator(countours):
-    file = open("RAPID.txt", "w")
-    file.write("MODULE Module1\n")
+    file = open("RAPID.txt", "w") # Open file in write mode
+    file.write("MODULE Module1\n") 
     file.write("\tCONST robtarget home:= [[280.027029643,125.4,-515.328184811],[0,0.608761442,0,0.79335333],[0,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];\n\n")
 
-    #Runs the plane finder sequence
-    define_Calibpoints(file)
-    define_Drawingpoints(file, countours)
-    plane_finder_sequence(file)
-    drawing_sequence(file, countours)  # Example drawing points
+    define_Calibpoints(file) # Define calibration points
+    define_Drawingpoints(file, countours) # Define drawing points
+    plane_finder_sequence(file) #  Define plane finder sequence
+    drawing_sequence(file, countours)  # Define drawing sequence
 
-    file.write("\tPROC main()\n")
-    file.write("\t\tMoveJ home,v100,z1,BHH_pen\WObj:=Workobject_1;\n")
-    file.write("\t\tplane_finder;\n")
-    file.write("\t\tdrawing_sequence;\n")
+    file.write("\tPROC main()\n") # Main procedure
+    file.write("\t\tMoveJ home,v100,z1,BHH_pen\WObj:=Workobject_1;\n") # Move to home position
+    file.write("\t\tplane_finder;\n") # Call plane finder
+    file.write("\t\tdrawing_sequence;\n") # Call drawing sequence
 
-    file.write("\t\tMoveJ home,v100,z1,BHH_pen\WObj:=Workobject_1;\n")
+    file.write("\t\tMoveJ home,v100,z1,BHH_pen\WObj:=Workobject_1;\n") # Return to home position
     file.write("\tENDPROC\n")
     file.write("ENDMODULE\n")
 
-if __name__ == "__main__":
-    test_points = [(20, 20), (50, 50), (30, 50)]
-    main(test_points)
