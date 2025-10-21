@@ -27,9 +27,9 @@ def define_Calibpoints(file):
 def define_Drawingpoints(file,countours):
     for i, cnt in enumerate(countours):
         for j, point in enumerate(cnt):
-            if j%5 == 0:
+            if j%5 == 0:                    # Downsample points for RAPID file
                 name = f"Dpoint{i}_{j}"
-                file.write(stringify_point(name, point[0][0]/3, point[0][1]/3))
+                file.write(stringify_point(name, point[0][0]/3, point[0][1]/3)) # Scale down the image
 
 #Helper function to format a point in RAPID syntax
 def stringify_point(name, x, y):
@@ -38,11 +38,11 @@ def stringify_point(name, x, y):
 #Drawing sequence
 def drawing_sequence(file, countours):
     file.write("\n\tPROC drawing_sequence()\n")
-    file.write("\t\tConfL \Off;\n")
+    file.write("\t\tConfL \Off;\n") # Disable configuration control for linear moves
     for i, cnt in enumerate(countours):
         file.write(f"\t\tMoveL Offs(Dpoint{i}_{0},0,0,-20),v100,z1,BHH_pen\WObj:=Workobject_2;\n")
         for j, point in enumerate(cnt):
-            if j%5 == 0:
+            if j%5 == 0:                # Downsample points for RAPID file  
                 file.write(f"\t\tMoveL Dpoint{i}_{j},v100,z1,BHH_pen\WObj:=Workobject_2;\n")
         file.write(f"\t\tMoveL Offs(Dpoint{i}_{(len(cnt)-1)-(len(cnt)-1)%5},0,0,-20),v100,z1,BHH_pen\WObj:=Workobject_2;\n")
 
