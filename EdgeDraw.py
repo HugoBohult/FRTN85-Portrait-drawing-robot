@@ -6,6 +6,7 @@ from time import sleep
 
 def segment(image_path, K=5, draw=False):
     img = cv.imread(image_path)
+    img = cv.blur(img, (5,5), 0) 
     Z = img.reshape((-1,3))
     Z = np.float32(Z)
 
@@ -21,9 +22,11 @@ def segment(image_path, K=5, draw=False):
     #im = cv.imread('Edward.jpg')
     #assert im is not None, "file could not be read, check with os.path.exists()"
     #imgray = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
-    ret, thresh = cv.threshold(gray,40, 255, 0)
+    #ret, thresh = cv.threshold(gray,80,255, cv.THRESH_TOZERO_INV)
+    thresh = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+                              cv.THRESH_BINARY_INV, 21, 10)
     contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
-    contours = [cnt for cnt in contours if cv.contourArea(cnt) >= 50]
+    contours = [cnt for cnt in contours if cv.contourArea(cnt) >= 10]
 
         
 
@@ -32,15 +35,12 @@ def segment(image_path, K=5, draw=False):
     #t.penup()
     if(draw):
         for cnt in contours:
-            print(cnt)
-            print(len(cnt))
-            print(cv.contourArea(cnt))
             area = cv.contourArea(cnt)
-            if  area < 50 :
+            if  area < 0 :
                 continue
             points = cnt[:,0,:]
             #print(points)
-            points = points[::3]  # downsample for faster drawing
+            points = points[::5]  # downsample for faster drawing
             t.penup()
             t.goto(points[0,0]-img.shape[1]/2, img.shape[0]/2-points[0,1])
             t.pendown()
